@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "./ui/button";
 import { Upload as UploadIcon, Image as ImageIcon, X } from "lucide-react";
+import Image from "next/image";
 
 interface ImageUploadProps {
   onImageSelect: (imageData: string) => void;
@@ -25,7 +26,6 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Update the selected file when the current image changes
   useEffect(() => {
     if (!currentImage) {
       setSelectedFile(null);
@@ -35,8 +35,8 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections) => {
       if (fileRejections?.length > 0) {
-        const error = fileRejections[0].errors[0];
-        onError?.(error.message);
+        const errorMessage = fileRejections[0].errors[0]?.message;
+        onError?.(errorMessage || "File rejected");
         return;
       }
 
@@ -46,7 +46,6 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
       setSelectedFile(file);
       setIsLoading(true);
 
-      // Convert the file to base64
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target && event.target.result) {
@@ -55,13 +54,13 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
         }
         setIsLoading(false);
       };
-      reader.onerror = (error) => {
+      reader.onerror = () => {
         onError?.("Error reading file. Please try again.");
         setIsLoading(false);
       };
       reader.readAsDataURL(file);
     },
-    [onImageSelect]
+    [onImageSelect, onError]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -70,7 +69,7 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
       "image/png": [".png"],
       "image/jpeg": [".jpg", ".jpeg"]
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
     multiple: false
   });
 
@@ -84,58 +83,57 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
       {!currentImage ? (
         <div
           {...getRootProps()}
-          className={`min-h-[150px] p-4 rounded-lg
-          ${isDragActive ? "bg-secondary/50" : "bg-secondary"}
-          ${isLoading ? "opacity-50 cursor-wait" : ""}
-          transition-colors duration-200 ease-in-out hover:bg-secondary/50
-          border-2 border-dashed border-secondary
-          cursor-pointer flex items-center justify-center gap-4
-        `}
+          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
+            isDragActive
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-300 hover:border-gray-400"
+          }`}
         >
           <input {...getInputProps()} />
-          <div className="flex flex-row items-center" role="presentation">
-            <UploadIcon className="w-8 h-8 text-primary mr-3 flex-shrink-0" aria-hidden="true" />
-            <div className="">
-              <p className="text-sm font-medium text-foreground">
-                Drop your image here or click to browse
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Maximum file size: 10MB
-              </p>
-            </div>
-          </div>
+          <ImageIcon className="mx-auto mb-4" size={32} />
+          <p className="text-gray-700 font-medium mb-2">
+            Drop your image here or click to browse
+          </p>
+          <p className="text-sm text-gray-500">
+            Maximum file size: 10MB
+          </p>
         </div>
       ) : (
-        <div className="flex flex-col items-center p-4 rounded-lg bg-secondary">
-          <div className="flex w-full items-center mb-4">
-            <ImageIcon className="w-8 h-8 text-primary mr-3 flex-shrink-0" aria-hidden="true" />
-            <div className="flex-grow min-w-0">
-              <p className="text-sm font-medium truncate text-foreground">
-                {selectedFile?.name || "Current Image"}
-              </p>
-              {selectedFile && (
-                <p className="text-xs text-muted-foreground">
-                  {formatFileSize(selectedFile?.size ?? 0)}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <UploadIcon size={20} className="text-gray-600" />
+              <div>
+                <p className="font-semibold">
+                  {selectedFile?.name || "Current Image"}
                 </p>
-              )}
+                {selectedFile && (
+                  <p className="text-sm text-gray-500">
+                    {formatFileSize(selectedFile?.size ?? 0)}
+                  </p>
+                )}
+              </div>
             </div>
             <Button
-              variant="ghost"
-              size="icon"
               onClick={handleRemove}
-              className="flex-shrink-0 ml-2"
+              variant="ghost"
+              size="sm"
+              disabled={isLoading}
             >
-              <X className="w-4 h-4" />
-              <span className="sr-only">Remove image</span>
+              <X size={20} />
             </Button>
           </div>
-          <div className="w-full overflow-hidden rounded-md">
-            <img
-              src={currentImage}
-              alt="Selected"
-              className="w-full h-auto object-contain"
-            />
-          </div>
+
+          {selectedFile && (
+            <div className="relative w-full h-48 mb-4">
+              <Image
+                src={currentImage}
+                alt="Selected image"
+                fill
+                className="object-contain"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
