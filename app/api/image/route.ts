@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     // Build messages array with history
     const messages = history && history.length > 0
       ? [
-          ...history.map((item: any) => ({
+          ...history.map((item: { role: "user" | "assistant"; parts: string | object[] }) => ({
             role: item.role,
             content: item.parts,
           })),
