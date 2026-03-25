@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import { GoogleGenerativeAI } from "@google/genai";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,40 +12,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build messages array with history
-    const messages = history && history.length > 0
+    const client = new GoogleGenerativeAI({
+      apiKey: process.env.GOOGLE_API_KEY,
+    });
+
+    const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    // Build content array with history
+    const contents = history && history.length > 0
       ? [
-          ...history.map((item: { role: "user" | "assistant"; parts: string | object[] }) => ({
+          ...history.map((item: { role: "user" | "model"; parts: any[] }) => ({
             role: item.role,
-            content: item.parts,
+            parts: item.parts,
           })),
           {
             role: "user",
-            content: [
-              { type: "text", text: prompt },
-              ...(inputImage ? [{ type: "image", image: inputImage }] : []),
+            parts: [
+              { text: prompt },
+              ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
             ],
           },
         ]
       : [
           {
             role: "user",
-            content: [
-              { type: "text", text: prompt },
-              ...(inputImage ? [{ type: "image", image: inputImage }] : []),
+            parts: [
+              { text: prompt },
+              ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
             ],
           },
         ];
 
-    // Use Google's API directly with @ai-sdk/google
-    const result = await generateText({
-      model: google("gemini-2.0-flash"),
-      messages,
-    });
+    const result = await model.generateContent({ contents });
+    const text = result.response.text();
 
     return NextResponse.json({
       success: true,
-      text: result.text,
+      text,
     });
   } catch (error) {
     console.error("Error:", error);
