@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "ai": "^6.0.0",
-    "@ai-sdk/google": "^0.2.0",
+    "@ai-sdk/google": "^3.0.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-popover": "^1.1.6",
     "@radix-ui/react-slot": "^1.1.2",
@@ -24,7 +24,8 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",
     "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
