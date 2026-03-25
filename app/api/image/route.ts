@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const messages = history && history.length > 0
       ? [
-          ...history.map((item: { role: string; parts: Record[] }) => ({
+          ...history.map((item: { role: string; parts: Array<Record<string, unknown>> }) => ({
             role: item.role,
             content: item.parts,
           })),
