@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
-
-const MODEL_ID = "google/gemini-2.0-flash";
+import { google } from "@ai-sdk/google";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,9 +38,9 @@ export async function POST(req: NextRequest) {
           },
         ];
 
-    // Use Vercel AI Gateway
+    // Use Google's API directly with @ai-sdk/google
     const result = await generateText({
-      model: MODEL_ID,
+      model: google("gemini-2.0-flash"),
       messages,
     });
 
