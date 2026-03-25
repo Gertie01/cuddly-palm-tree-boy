@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/genai";
+import { Client } from "@google/genai";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,43 +12,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = new GoogleGenerativeAI({
+    const client = new Client({
       apiKey: process.env.GOOGLE_API_KEY,
     });
 
-    const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    // Build content array with history
-    const contents = history && history.length > 0
-      ? [
-          ...history.map((item: { role: "user" | "model"; parts: any[] }) => ({
-            role: item.role,
-            parts: item.parts,
-          })),
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
-            ],
-          },
-        ]
-      : [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
-            ],
-          },
-        ];
-
-    const result = await model.generateContent({ contents });
-    const text = result.response.text();
+    const model = client.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: history && history.length > 0
+        ? [
+            ...history.map((item: { role: string; parts: Record<string, unknown>[] }) => ({
+              role: item.role,
+              parts: item.parts,
+            })),
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
+              ],
+            },
+          ]
+        : [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
+              ],
+            },
+          ],
+    });
 
     return NextResponse.json({
       success: true,
-      text,
+      text: model.text,
     });
   } catch (error) {
     console.error("Error:", error);
