@@ -13,40 +13,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = new Client({
-      apiKey: process.env.GOOGLE_API_KEY,
-    });
+    const messages = history && history.length > 0
+      ? [
+          ...history.map((item: { role: string; parts: Record[] }) => ({
+            role: item.role,
+            content: item.parts,
+          })),
+          {
+            role: "user" as const,
+            content: [
+              { type: "text" as const, text: prompt },
+              ...(inputImage ? [{ type: "image" as const, image: inputImage }] : []),
+            ],
+          },
+        ]
+      : [
+          {
+            role: "user" as const,
+            content: [
+              { type: "text" as const, text: prompt },
+              ...(inputImage ? [{ type: "image" as const, image: inputImage }] : []),
+            ],
+          },
+        ];
 
-    const model = client.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: history && history.length > 0
-        ? [
-            ...history.map((item: { role: string; parts: Record<string, unknown>[] }) => ({
-              role: item.role,
-              parts: item.parts,
-            })),
-            {
-              role: "user",
-              parts: [
-                { text: prompt },
-                ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
-              ],
-            },
-          ]
-        : [
-            {
-              role: "user",
-              parts: [
-                { text: prompt },
-                ...(inputImage ? [{ inlineData: { mimeType: "image/jpeg", data: inputImage } }] : []),
-              ],
-            },
-          ],
+    const { text } = await generateText({
+      model: google("gemini-2-flash"),
+      messages,
     });
 
     return NextResponse.json({
       success: true,
-      text: model.text,
+      text,
     });
   } catch (error) {
     console.error("Error:", error);
