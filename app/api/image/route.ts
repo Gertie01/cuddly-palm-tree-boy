@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
 export async function POST(req: NextRequest) {
