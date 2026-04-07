@@ -1,4 +1,4 @@
-name: Sync to Hugging Face Space
+name: Sync to Hugging Face Space (with auto LFS)
 
 on:
   push:
@@ -16,9 +16,28 @@ jobs:
           lfs: true
 
       - name: Install Git LFS
+        run: git lfs install
+
+      - name: Auto-detect and track large files (>10MB)
         run: |
-          git lfs install
-          git lfs pull
+          echo "Scanning for files larger than 10MB..."
+          LARGE_FILES=$(find . -type f -size +10M | grep -v ".git" || true)
+
+          if [ -n "$LARGE_FILES" ]; then
+            echo "Large files found:"
+            echo "$LARGE_FILES"
+
+            for file in $LARGE_FILES; do
+              echo "Tracking $file with Git LFS"
+              git lfs track "$file"
+            done
+
+            git add .gitattributes
+            git add $LARGE_FILES
+            git commit -m "Auto-track large files with Git LFS" || echo "No changes to commit"
+          else
+            echo "No large files found."
+          fi
 
       - name: Configure Git
         run: |
