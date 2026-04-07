@@ -1,4 +1,4 @@
-name: Sync to Hugging Face Space
+name: Sync to HuggingFace Space
 
 on:
   push:
@@ -9,30 +9,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout full history (fixes shallow clone)
         uses: actions/checkout@v4
         with:
-          lfs: true
+          fetch-depth: 0
 
       - name: Install Git LFS
         run: |
           git lfs install
-          git lfs track "*.mov"
-          git lfs track "*.mp4"
-          git lfs track "*.webm"
-          git lfs track "*.png"
-          git lfs track "*.jpg"
-          git add .gitattributes
-          git commit -m "Track media with LFS" || echo "No changes"
 
-      - name: Remove large files from history
+      - name: Configure HuggingFace credentials
         run: |
-          pip install git-filter-repo
-          git filter-repo --strip-blobs-bigger-than 10M || echo "History already clean"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-      - name: Push to Hugging Face Space
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      - name: Add HuggingFace remote
         run: |
-          git remote add space https://Gertie2013:${HF_TOKEN}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
+          git remote add space https://Gertie2013:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
+
+      - name: Push to HuggingFace Space
+        run: |
           git push space main --force
