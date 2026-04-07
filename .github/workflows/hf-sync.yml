@@ -1,0 +1,17 @@
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Push to Hugging Face Space
+        uses: huggingface/huggingface-sync-action@v0.1
+        with:
+          repo: "Gertie2013/cuddly-palm-tree-boy"
+          token: ${{ secrets.HF_TOKEN }}
