@@ -83,5 +83,5 @@ EOF
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://user:$HF_TOKEN@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
+          git remote add space https://user:${{ env.HF_TOKEN }}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
           git push space main:main --force
