@@ -7,11 +7,32 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Git LFS
+        run: |
+          git lfs install
+          git lfs track "*.mov"
+          git lfs track "*.mp4"
+          git lfs track "*.webm"
+          git lfs track "*.png"
+          git lfs track "*.jpg"
+          git add .gitattributes
+          git commit -m "Track media with LFS" || echo "No changes"
+
+      - name: Remove large files from history
+        run: |
+          pip install git-filter-repo
+          git filter-repo --strip-blobs-bigger-than 10M || echo "History already clean"
 
       - name: Push to Hugging Face Space
-        uses: huggingface/huggingface-sync-action@v0.1
-        with:
-          repo: "Gertie2013/cuddly-palm-tree-boy"
-          token: ${{ secrets.HF_TOKEN }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add space https://Gertie2013:${HF_TOKEN}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
+          git push space main --force
