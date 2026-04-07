@@ -25,9 +25,9 @@ jobs:
         run: |
           echo "Scanning for large files..."
           LARGE_FILES=$(find . -type f -size +10M -not -path "./.git/*" || true)
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$LARGE_FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$LARGE_FILES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Upload large files to HF Dataset
         if: steps.detect.outputs.files != ''
@@ -44,23 +44,24 @@ jobs:
 
           python - <<EOF
 from huggingface_hub import HfApi, upload_folder
+
 api = HfApi()
 api.create_repo(
     repo_id="Gertie2013/cuddly-palm-tree-boy-assets",
     repo_type="dataset",
     exist_ok=True,
-    token="${{ secrets.HF_TOKEN }}"
+    token="${{ secrets.HF_TOKEN }}",
 )
 upload_folder(
     repo_id="Gertie2013/cuddly-palm-tree-boy-assets",
     repo_type="dataset",
     folder_path="hf_upload",
-    token="${{ secrets.HF_TOKEN }}"
+    token="${{ secrets.HF_TOKEN }}",
 )
 print("Upload complete.")
 EOF
 
-      - name: Remove large files from git history
+      - name: Remove large files from git index
         if: steps.detect.outputs.files != ''
         run: |
           echo "${{ steps.detect.outputs.files }}" | while read file; do
@@ -69,7 +70,7 @@ EOF
             fi
           done
 
-      - name: Update gitignore
+      - name: Update .gitignore
         if: steps.detect.outputs.files != ''
         run: |
           echo "${{ steps.detect.outputs.files }}" >> .gitignore
@@ -88,5 +89,5 @@ EOF
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://user:${{ env.HF_TOKEN }}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
+          git remote add space "https://user:${{ env.HF_TOKEN }}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy" || true
           git push space main:main --force
