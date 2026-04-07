@@ -1,32 +1,33 @@
-name: Sync to HuggingFace Space
+name: Sync to Hugging Face Space
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout full history (fixes shallow clone)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          lfs: true
 
       - name: Install Git LFS
         run: |
           git lfs install
+          git lfs pull
 
-      - name: Configure HuggingFace credentials
+      - name: Configure Git
         run: |
-          git config --global user.email "actions@github.com"
+          git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-      - name: Add HuggingFace remote
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://Gertie2013:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
-
-      - name: Push to HuggingFace Space
-        run: |
-          git push space main --force
+          git remote add space https://user:$HF_TOKEN@huggingface.co/spaces/Gertie2013/cuddly-palm-tree-boy
+          git push space main:main --force
